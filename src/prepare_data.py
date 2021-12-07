@@ -3,7 +3,23 @@ import pandas as pd
 from sklearn.utils import resample
 from glob import glob
 from sklearn.model_selection import train_test_split
+from PIL import Image
 
+
+
+def rotate_images(input_file_locations):
+    # Figue out which ones we are trying to classify
+    emotions = glob(input_file_locations + "*")
+
+    for emotion in emotions:
+        files = glob(emotion+"/*")
+        for file in files:
+            im = Image.open(file)
+            directory = file.split('/')[0:2]
+            name = file.split('/')[2].split('.')[0]
+            for degree in [90, 180, 270]:
+                im=im.rotate(90, expand=True)
+                im.save(f"{directory[0]}/{directory[1]}/{name}_{degree}.jpg")
 
 
 def prepare_data(input_file_locations, traindir, validdir, testdir,do_oversampling, oversampling):
