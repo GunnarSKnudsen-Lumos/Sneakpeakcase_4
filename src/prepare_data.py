@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 
 
-def prepare_data(input_file_locations, traindir, validdir, testdir, oversampling):
+def prepare_data(input_file_locations, traindir, validdir, testdir,do_oversampling, oversampling):
     
     # (Re)create folder structure
     os.system(f"rm -rf data/")
@@ -45,24 +45,27 @@ def prepare_data(input_file_locations, traindir, validdir, testdir, oversampling
     X_val['type'] = 'val'
     X_test['type'] = 'test'
 
-    # Resample/oversample due to class imbalance
-    amount_to_sample = X_train.groupby("category")\
-                    .aggregate('count')\
-                    .rename(columns = {'filepath':'cnt'})\
-                    .reset_index()\
-                    .sort_values(by='cnt',ascending=False).cnt.max()
+    if do_oversampling:
+        # Resample/oversample due to class imbalance
+        amount_to_sample = X_train.groupby("category")\
+                        .aggregate('count')\
+                        .rename(columns = {'filepath':'cnt'})\
+                        .reset_index()\
+                        .sort_values(by='cnt',ascending=False).cnt.max()
 
-    amount_to_sample = amount_to_sample*oversampling
-    amount_to_sample
+        amount_to_sample = amount_to_sample*oversampling
+        amount_to_sample
 
-    # Oversample
-    X_train_resampled = X_train.head(0).copy()
-    for em in X_train.category.unique():
-        oversampl = resample(X_train[X_train.category == em],replace=True , n_samples=amount_to_sample, random_state=42)
-        X_train_resampled = pd.concat([X_train_resampled, oversampl])
+        # Oversample
+        X_train_resampled = X_train.head(0).copy()
+        for em in X_train.category.unique():
+            oversampl = resample(X_train[X_train.category == em],replace=True , n_samples=amount_to_sample, random_state=42)
+            X_train_resampled = pd.concat([X_train_resampled, oversampl])
 
-    # Concatenate
-    fulldf = pd.concat([X_train_resampled,X_test,X_val])
+        # Concatenate
+        fulldf = pd.concat([X_train_resampled,X_test,X_val])
+    else: # If no oversampling
+        fulldf = pd.concat([X_train,X_test,X_val])
 
     # Create base folders
     for cat in fulldf.category.unique():

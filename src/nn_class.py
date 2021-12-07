@@ -132,42 +132,62 @@ class nn_class():
     def set_model(self, model_name, describe_model=True):
         if model_name == 'resnet50':
             self.model = models.resnet50(pretrained=True)
-            
-            # Freeze model weights
-            for self.param in self.model.parameters():
-                self.param.requires_grad = False
-    
-            if describe_model:
-                print(self.model)
-    
-            self.n_inputs = self.model.fc.in_features
-
-            self.model.fc = nn.Sequential(
-                                  nn.Linear(self.n_inputs, 256), 
-                                  nn.ReLU(), 
-                                  nn.Dropout(0.4),
-                                  nn.Linear(256, self.n_classes),                   
-                                  nn.LogSoftmax(dim=1))
-
-            if self.train_on_gpu:
-                self.model = self.model.to('cuda')
-
-            if self.multi_gpu:
-                self.model = nn.DataParallel(self.model)
-
-            #### DO WE NEED THIS?
-            self.model.class_to_idx = self.data['train'].class_to_idx
-            self.model.idx_to_class = {
-                idx: class_
-                for class_, idx in self.model.class_to_idx.items()
-            }
-
-
-            self.criterion = nn.NLLLoss()
-            self.optimizer = optim.Adam(self.model.parameters())
-            
             self.save_file_name = f'resnet50-transfer.pt'
             self.checkpoint_path = f'resnet50-transfer.pth'
+        if model_name == 'resnet18':
+            self.model = models.resnet18(pretrained=True)
+            self.save_file_name = f'resnet18-transfer.pt'
+            self.checkpoint_path = f'resnet18-transfer.pth'
+        # Doesn't work (yet?)
+        if model_name == 'vgg16':
+            self.model = models.vgg16(pretrained=True)
+            self.save_file_name = f'vgg16-transfer.pt'
+            self.checkpoint_path = f'vgg16-transfer.pth'
+        if model_name == 'alexnet':
+            self.model = models.alexnet(pretrained=True)
+            self.save_file_name = f'alexnet-transfer.pt'
+            self.checkpoint_path = f'alexnet-transfer.pth'
+        if model_name == 'wide_resnet50_2':
+            self.model = models.wide_resnet50_2(pretrained=True)
+            self.save_file_name = f'wide_resnet50_2-transfer.pt'
+            self.checkpoint_path = f'wide_resnet50_2-transfer.pth'
+            
+            
+            
+        # Freeze model weights
+        for self.param in self.model.parameters():
+            self.param.requires_grad = False
+
+        if describe_model:
+            print(self.model)
+
+        self.n_inputs = self.model.fc.in_features
+
+        self.model.fc = nn.Sequential(
+                              nn.Linear(self.n_inputs, 256), 
+                              nn.ReLU(), 
+                              nn.Dropout(0.4),
+                              nn.Linear(256, self.n_classes),                   
+                              nn.LogSoftmax(dim=1))
+
+        if self.train_on_gpu:
+            self.model = self.model.to('cuda')
+
+        if self.multi_gpu:
+            self.model = nn.DataParallel(self.model)
+
+        #### DO WE NEED THIS?
+        self.model.class_to_idx = self.data['train'].class_to_idx
+        self.model.idx_to_class = {
+            idx: class_
+            for class_, idx in self.model.class_to_idx.items()
+        }
+
+
+        self.criterion = nn.NLLLoss()
+        self.optimizer = optim.Adam(self.model.parameters())
+            
+
 
     def run_train(self, early_stopping = 3, n_epochs = 30):
         self.model, self.history = self.train(self.model,
@@ -209,8 +229,8 @@ class nn_class():
         """
 
         model_name = self.checkpoint_path.split('-')[0]
-        assert (model_name in ['vgg16', 'resnet50'
-                               ]), "Path must have the correct model name"
+        #assert (model_name in ['vgg16', 'resnet50'
+        #                       ]), "Path must have the correct model name"
 
         # Basic details
         checkpoint = {
@@ -260,8 +280,8 @@ class nn_class():
 
         # Get the model name
         model_name = self.checkpoint_path.split('-')[0]
-        assert (model_name in ['vgg16', 'resnet50'
-                               ]), "Path must have the correct model name"
+        #assert (model_name in ['vgg16', 'resnet50'
+        #                       ]), "Path must have the correct model name"
 
         # Load in checkpoint
         checkpoint = torch.load(self.checkpoint_path)
